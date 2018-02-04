@@ -1,30 +1,39 @@
 object Employees extends App{
-  def solution( infos: List[(Int, Int, Int)]): List[(Int, Int, Int)] = {
-    val entries = infos.flatMap{ case (id, startDate, endDate) => List((startDate,1),(endDate,-1))}
-      .sortBy{case(date, count)=>date}
+  case class EmployeeInfo(id:Int, startDate:Int, endDate:Int)
+  case class Entry(direction:Int, date:Int)
+  case class IntervalCount(startDate:Int, endDate:Int, count:Int)
+
+  def solution( infos: List[EmployeeInfo]): List[IntervalCount] = {
+    val entries = infos.flatMap{ info => List(Entry(1, info.startDate),Entry(-1,info.endDate))}
+      .sortBy(_.date)
 
     convert(entries, 0)
   }
 
-  def convert( entries:List[(Int, Int)], headCount:Int): List[(Int, Int, Int)] = {
+  def convert( entries:List[Entry], headCount:Int): List[IntervalCount] = {
     entries match {
       case Nil => Nil
       case head :: Nil => Nil
       case head :: second :: tail =>
-        if(head._1==second._1) {
-          convert( (head._1, head._2+second._2) :: tail, headCount)
+        if(head.date==second.date) {
+          convert(
+            Entry(head.direction+second.direction, head.date ) :: tail,
+            headCount)
         } else {
-          (head._1, second._1, headCount+head._1) :: convert(second :: tail, headCount+head._1)
+          val intervalCount = IntervalCount(head.date, second.date, headCount+head.direction)
+          val rest = convert(second :: tail, headCount+head.direction)
+          intervalCount :: rest
         }
     }
   }
 
   val source = List(
-    (3333, 1000, 2000),
-    (100, 1500,3000),
-    (200, 1700,2500));
+    EmployeeInfo(3333, 1000, 2000),
+    EmployeeInfo(2000, 1200, 2000),
+    EmployeeInfo(100, 1500,3000),
+    EmployeeInfo(200, 1700,2500))
 
-  val result = solution(source);
+  val result = solution(source)
 
-  result.foreach(e=>println(e._1, e._2, e._3))
+  result.foreach(println(_))
 }
